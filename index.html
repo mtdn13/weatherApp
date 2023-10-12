@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Weather App</title>
+    <script src="./script/main.js" defer></script>
+    <link rel="stylesheet" href="./styles/main.css">
+</head>
+<body>
+<div class="wrapper light-theme">
+    <div class="content-container">
+        <div class="header">
+            <div class="mode">
+                <div class="mode-icon">
+                    <div class="ellipse">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="31" height="31" viewBox="0 0 31 31" fill="none">
+                            <ellipse cx="15.7426" cy="15.6774" rx="14.8515" ry="14.7581" fill="#111111"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mode-name">Light mode</div>
+            </div>
+                <input type="text" placeholder='Search for your preferred city (e.g. Kyiv)' class="searchBar">
+                <input type="button" value="Search" class="submit">
+        </div>
+        <div class="main">
+            <div class="info light-bg"></div>
+            <div class="weather-details light-bg">
+                <div class="weather-details-main"></div>
+                <div class="weather-details-secondary"></div>
+                <div class="weather-details-extra">
+                </div>
+            </div>
+            <div class="weather-weekly-forecast light-bg">
+                <h2 class="forecast-heading">5 Days Forecast:</h2>
+                <div class="forecast-list"></div>
+            </div>
+            <div class="detailed-forecast light-bg">
+                <h2 class="detailed-heading">Hourly Forecast: </h2>
+                <div class="detailed-container"></div>
+            </div>
+    </div>
+
+    </div>
+</div>
+
+
+
+</body>
+</html>
