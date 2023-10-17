@@ -1,4 +1,3 @@
-
 class App {
     static darkMode = false;
     static defaultCity = "Kyiv";

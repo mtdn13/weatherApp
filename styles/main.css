@@ -395,3 +395,7 @@ body, h1, h2, h3, h4, p {
 .wrapper .main .detailed-forecast .detailed-container .darkmode-bg {
     background-color: #373636;
 }
+
+.weather-image {
+    margin-top: 70px;
+}
