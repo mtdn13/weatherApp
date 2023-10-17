@@ -170,25 +170,6 @@ class Weather {
 
 }
 class Helper {
-
-    getImageUrl(name) {
-        let img = {
-            sunsetB: "../assets/img/sunset.png",
-            sunriseB: "../assets/img/sunrise.png",
-            humidityB: "../assets/img/humidity.png",
-            windB: "../assets/img/wind.png",
-            pressureB: "../assets/img/pressure.png",
-            uvB: "../assets/img/uv.png",
-            sunsetW: "../assets/img/sunset-white.png",
-            sunriseW: "../assets/img/sunrise-white.png",
-            humidityW: "../assets/img/humidity-white.png",
-            windW: "../assets/img/wind-white.png",
-            pressureW: "../assets/img/pressure-white.png",
-            uvW: "../assets/img/uv-white.png",
-
-        }
-        return img[name];
-    }
     getDayName(date) {
         let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
         return names[date.getDay()];
@@ -241,7 +222,7 @@ class WeatherMainCard extends Helper {
         this.pressure = pressure;
         this.uv = Math.floor(Math.random() * 10);
     }
-    render(anchor) {
+    render() {
         document.querySelector(".main-temp").textContent = this.temp;
         document.querySelector(".feel-temp-value").textContent = this.feelTemp;
         document.querySelector(".sunrise-value").textContent = this.sunrise;
