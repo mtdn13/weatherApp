@@ -1,5 +1,81 @@
-const DEFAULT_CITY = "Kyiv";
+
 class App {
+    static darkMode = false;
+    static defaultCity = "Kyiv";
+    static weatherIcons = {
+        "01d": "./assets/img/day_clear_sky.png",
+        "01n": "./assets/img/night_clear_sky.png",
+        "02d": "./assets/img/day_few_clouds.png",
+        "02n": "./assets/img/night_few_clouds.png",
+        "03d": "./assets/img/day_clouds.png",
+        "03n": "./assets/img/night_clouds.png",
+        "04d": "./assets/img/day_clouds.png",
+        "04n": "./assets/img/night_clouds.png",
+        "09d": "./assets/img/shower_rain.png",
+        "09n": "./assets/img/shower_rain.png",
+        "10d": "./assets/img/day_rain.png",
+        "10n": "./assets/img/night_rain.png",
+        "11d": "./assets/img/day_thunder.png",
+        "11n": "./assets/img/night_thunder.png",
+        "13d": "./assets/img/day_snow.png",
+        "13n": "./assets/img/night_snow.png",
+        "50d": "./assets/img/mist.png",
+        "50n": "./assets/img/mist.png",
+    }
+    init() {
+        if (localStorage.getItem("lastCity")) {
+            new Weather(localStorage.getItem("lastCity")).renderAll();
+        } else {
+            new Weather(App.defaultCity).renderAll();
+        }
+        if (localStorage.getItem("darkMode") === "true") {
+            this.changeMode();
+        }
+
+        document.querySelector(".submit").addEventListener("click", () => {
+            new Weather(document.querySelector(".searchBar").value).renderAll();
+            localStorage.setItem("lastCity", document.querySelector(".searchBar").value);
+            document.querySelector(".searchBar").value = "";
+        })
+        document.querySelector(".searchBar").addEventListener("keyup", (ev) => {
+            if (ev.code === "Enter") {
+                new Weather(document.querySelector(".searchBar").value).renderAll();
+                localStorage.setItem("lastCity", document.querySelector(".searchBar").value);
+                document.querySelector(".searchBar").value = "";
+            }
+        })
+        document.querySelector(".mode").addEventListener("click", () => {
+            App.darkMode = !App.darkMode;
+            localStorage.setItem("darkMode", App.darkMode);
+
+            this.changeMode();
+        })
+    }
+    changeMode() {
+        let widgets = [...document.querySelector(".main").children];
+        let mode = document.querySelector(".mode-name");
+        widgets.forEach(item => item.classList.toggle("dark-bg"));
+        document.querySelector(".wrapper").classList.toggle("dark-theme");
+        mode.classList.toggle("dark-mode");
+        mode.innerText === "Light mode" ? mode.innerText = "Dark mode" : mode.innerText = "Light mode";
+        document.querySelector(".ellipse").classList.toggle("dark-on");
+        this.changeImgColor();
+    }
+
+    changeImgColor() {
+        document.querySelector(".sunrise").classList.toggle("sunrise-white");
+        document.querySelector(".sunset").classList.toggle("sunset-white");
+        document.querySelector(".weather-humidity").classList.toggle("weather-humidity-white");
+        document.querySelector(".weather-pressure").classList.toggle("weather-pressure-white");
+        document.querySelector(".weather-wind").classList.toggle("weather-wind-white");
+        document.querySelector(".weather-uv").classList.toggle("weather-uv-white");
+    }
+
+
+
+}
+class Weather {
+
     constructor(city) {
         this.city = city.toLowerCase();
         this.url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=283d8e7b9d630c5a5a260b6336ab4426&units=metric`;
@@ -17,7 +93,7 @@ class App {
                     data.push(
                         new WeatherListItem(
                             `${Math.round((dayTime[i].main.temp + nightTime[i].main.temp) / 2)}\xB0C`,
-                            `https://openweathermap.org/img/wn/${dayTime[i].weather[0].icon}@2x.png`,
+                            `${App.weatherIcons[dayTime[i].weather[0].icon]}`,
                             new Date(nightTime[i].dt_txt),
                         )
                     )
@@ -40,7 +116,7 @@ class App {
                     data.push(
                         new WeatherCard(
                             `${new Date(json.list[i].dt_txt).getUTCHours()}:00`,
-                            `https://openweathermap.org/img/wn/${json.list[i].weather[0].icon}@2x.png`,
+                            `${App.weatherIcons[json.list[i].weather[0].icon]}`,
                             `${Math.round(json.list[i].main.temp)}\xB0C`,
                             `${Math.round(json.list[i].wind.speed)} m/s`,
                         ))
@@ -50,7 +126,7 @@ class App {
             .then(dataArr => {
                 document.querySelector(".detailed-container").innerHTML = "";
                 dataArr.forEach(item => {
-                    if (parseInt(item.time) > 3 && parseInt(item.time) < 21) {
+                    if (parseInt(item.time) > 3 && parseInt(item.time) < 15) {
                         item.class = "daytime-bg"
                     } else {
                         item.class = "nighttime-bg"
@@ -68,13 +144,12 @@ class App {
                     `${Math.round(json.main.feels_like)}\xB0C`,
                     (new Date(json.sys.sunrise * 1000)),
                     (new Date(json.sys.sunset * 1000)),
-                    `https://openweathermap.org/img/wn/${json.weather[0].icon}@2x.png`,
+                    `${App.weatherIcons[json.weather[0].icon]}`,
                     `${json.weather[0].main}`,
                     `${json.weather[0].description}`,
                     `${json.main.humidity}%`,
                     `${Math.round(json.wind.speed)} m/s`,
                     `${json.main.pressure} hPa`,
-                    `${json.visibility} m`,
                 )
             })
             .then(obj => {
@@ -95,9 +170,25 @@ class App {
 
 }
 class Helper {
-    constructor() {
-    }
 
+    getImageUrl(name) {
+        let img = {
+            sunsetB: "../assets/img/sunset.png",
+            sunriseB: "../assets/img/sunrise.png",
+            humidityB: "../assets/img/humidity.png",
+            windB: "../assets/img/wind.png",
+            pressureB: "../assets/img/pressure.png",
+            uvB: "../assets/img/uv.png",
+            sunsetW: "../assets/img/sunset-white.png",
+            sunriseW: "../assets/img/sunrise-white.png",
+            humidityW: "../assets/img/humidity-white.png",
+            windW: "../assets/img/wind-white.png",
+            pressureW: "../assets/img/pressure-white.png",
+            uvW: "../assets/img/uv-white.png",
+
+        }
+        return img[name];
+    }
     getDayName(date) {
         let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
         return names[date.getDay()];
@@ -133,8 +224,10 @@ class City extends Helper {
     }
 }
 class WeatherMainCard extends Helper {
+
+
     constructor(temp, feelTemp, sunriseTime, sunsetTime, iconUrl, weatherMain, weatherDesc,
-                humidity, wind, pressure, visibility) {
+                humidity, wind, pressure) {
         super();
         this.temp = temp;
         this.feelTemp = feelTemp;
@@ -146,53 +239,20 @@ class WeatherMainCard extends Helper {
         this.humidity = humidity;
         this.wind = wind;
         this.pressure = pressure;
-        this.visibility = visibility;
+        this.uv = Math.floor(Math.random() * 10);
     }
     render(anchor) {
-        let divMain = document.querySelector(".weather-details-main");
-        divMain.innerHTML = `
-            <div class="main-temp">${this.temp}</div>
-            <div class="feel-temp">
-                <span>Feels like:</span>
-                <span class="feel-temp-value">${this.feelTemp}</span>
-            </div>
-            <div class="sunrise">
-                <p class="sunrise-name">Sunrise</p>
-                <p class="sunrise-value">${this.sunrise} AM</p>
-            </div>
-            <div class="sunset">
-                <p class="sunset-name">Sunset</p>
-                <p class="sunset-value">${this.sunset} AM</p>
-            </div>
-        `;
-        let divSec = document.querySelector(".weather-details-secondary");
-        divSec.innerHTML = `
-            <img src=${this.iconUrl} class="weather-image" alt="weather-icon" width="250" height="250">
-                <p class="weather-main-desc">${this.weatherMain}</p>
-                <p class="weather-extra-desc">${this.weatherDesc}</p>
-        `
-        let divExtra = document.querySelector(".weather-details-extra");
-        divExtra.innerHTML = `
-            <div class="weather-humidity">
-                <p class="humidity-value">${this.humidity}</p>
-                <p class="extra-name">Humidity</p>
-            </div>
-                <div class="weather-wind">
-                <p class="wind-value">${this.wind}</p>
-                <p class="extra-name">Wind Speed</p>
-            </div>
-            <div class="weather-pressure">
-                <p class="pressure-value">${this.pressure}</p>
-                <p class="extra-name">Pressure</p>
-            </div>
-            <div class="weather-visibility">
-                <p class="visibility-value">${this.visibility}</p>
-                <p class="extra-name">Visibility</p>
-            </div>
-        `
-        anchor.append(divMain);
-        anchor.append(divSec);
-        anchor.append(divExtra);
+        document.querySelector(".main-temp").textContent = this.temp;
+        document.querySelector(".feel-temp-value").textContent = this.feelTemp;
+        document.querySelector(".sunrise-value").textContent = this.sunrise;
+        document.querySelector(".sunset-value").textContent = this.sunset;
+        document.querySelector(".weather-image").src = this.iconUrl;
+        document.querySelector(".weather-main-desc").textContent = this.weatherMain;
+        document.querySelector(".weather-extra-desc").textContent = this.weatherDesc;
+        document.querySelector(".humidity-value").textContent = this.humidity;
+        document.querySelector(".wind-value").textContent = this.wind;
+        document.querySelector(".pressure-value").textContent = this.pressure;
+        document.querySelector(".uv-value").textContent = this.uv;
     }
 }
 class WeatherCard extends Helper {
@@ -210,9 +270,9 @@ class WeatherCard extends Helper {
         div.classList.add("detailed-card", `${this.class}`);
         div.innerHTML = `
             <h3 class="detailed-time">${this.time}</h3>
-                <img src=${this.iconUrl} alt="weather-icon" class="detailed-img">
+                <img src=${this.iconUrl} alt="weather-icon" class="detailed-img" width="80" height="80">
                 <p class="detailed-temp">${this.temp}</p>
-                <img src="./assets/img/nav.png" alt="wind-icon" class="wind-img">
+                <img src="./assets/img/wind2.png" alt="wind-icon" class="wind-img" width="50" height="50">
                 <p class="detailed-wind">${this.wind}</p>`
         anchor.append(div);
     }
@@ -230,7 +290,7 @@ class WeatherListItem extends Helper {
         let div = document.createElement("div");
         div.classList.add("forecast-item");
         div.innerHTML = `
-            <img src=${this.iconUrl} alt="weather-icon" class="forecast-img" width="80" height="80">
+            <img src=${this.iconUrl} alt="weather-icon" class="forecast-img" width="65" height="65">
             <p class="forecast-temp">${this.temp}</p>
             <p class="forecast-date">${this.formattedDate}</p>
         `
@@ -239,22 +299,13 @@ class WeatherListItem extends Helper {
 }
 
 
+let app = new App();
+app.init();
 
-window.addEventListener("load", function () {
-    new App(DEFAULT_CITY).renderAll();
-});
 
-document.querySelector(".submit").addEventListener("click", function () {
-    new App(document.querySelector(".searchBar").value).renderAll();
-    document.querySelector(".searchBar").value = "";
-})
 
-document.querySelector(".searchBar").addEventListener("keyup", function (ev) {
-    if (ev.code === "Enter") {
-        new App(document.querySelector(".searchBar").value).renderAll();
-        document.querySelector(".searchBar").value = "";
-    }
-})
+
+
 
 
 
