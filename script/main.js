@@ -27,7 +27,8 @@ class App {
         } else {
             new Weather(App.defaultCity).renderAll();
         }
-        if (localStorage.getItem("darkMode") === "true") {
+        App.darkMode = localStorage.getItem("darkMode") !== null ? localStorage.getItem("darkMode") : false;
+        if (App.darkMode) {
             this.changeMode();
         }
 
@@ -35,18 +36,22 @@ class App {
             new Weather(document.querySelector(".searchBar").value).renderAll();
             localStorage.setItem("lastCity", document.querySelector(".searchBar").value);
             document.querySelector(".searchBar").value = "";
+            document.querySelector(".error").style.display = "none";
         })
         document.querySelector(".searchBar").addEventListener("keyup", (ev) => {
             if (ev.code === "Enter") {
                 new Weather(document.querySelector(".searchBar").value).renderAll();
                 localStorage.setItem("lastCity", document.querySelector(".searchBar").value);
                 document.querySelector(".searchBar").value = "";
+                document.querySelector(".error").style.display = "none";
             }
+        })
+        document.querySelector(".searchBar").addEventListener("focus", () => {
+            document.querySelector(".error").style.display = "none";
         })
         document.querySelector(".mode").addEventListener("click", () => {
             App.darkMode = !App.darkMode;
             localStorage.setItem("darkMode", App.darkMode);
-
             this.changeMode();
         })
     }
@@ -60,30 +65,42 @@ class App {
         document.querySelector(".ellipse").classList.toggle("dark-on");
         this.changeImgColor();
     }
-
     changeImgColor() {
         document.querySelector(".sunrise").classList.toggle("sunrise-white");
         document.querySelector(".sunset").classList.toggle("sunset-white");
-        document.querySelector(".weather-humidity").classList.toggle("weather-humidity-white");
-        document.querySelector(".weather-pressure").classList.toggle("weather-pressure-white");
-        document.querySelector(".weather-wind").classList.toggle("weather-wind-white");
-        document.querySelector(".weather-uv").classList.toggle("weather-uv-white");
+        if (localStorage.getItem("darkMode") === "true" || App.darkMode) {
+            document.querySelector(".weather-humidity-img").src = "./assets/img/humidity-white.png";
+            document.querySelector(".weather-pressure-img").src = "./assets/img/pressure-white.png";
+            document.querySelector(".weather-wind-img").src = "./assets/img/wind-white.png";
+            document.querySelector(".weather-uv-img").src = "./assets/img/uv-white.png";
+        } else {
+            document.querySelector(".weather-humidity-img").src = "./assets/img/humidity.png";
+            document.querySelector(".weather-pressure-img").src = "./assets/img/pressure.png";
+            document.querySelector(".weather-wind-img").src = "./assets/img/wind.png";
+            document.querySelector(".weather-uv-img").src = "./assets/img/uv.png";
+        }
+
     }
-
-
 
 }
 class Weather {
-
     constructor(city) {
         this.city = city.toLowerCase();
         this.url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=283d8e7b9d630c5a5a260b6336ab4426&units=metric`;
         this.forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=283d8e7b9d630c5a5a260b6336ab4426&units=metric`;
     }
-
     renderDailyForecast (url) {
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (response.status >= 400) {
+                    throw new Error("Client error: code - " + response.status + ". There are no such city, try another one...");
+                } else if (response.status >= 500) {
+                    throw new Error("Server error: code - " + response.status + "try later...");
+                }
+                else {
+                    return response.json();
+                }
+            })
             .then(json => {
                 let dayTime = json.list.filter(item => item.dt_txt.includes("12:00:00"));
                 let nightTime = json.list.filter(item => item.dt_txt.includes("00:00:00"));
@@ -104,11 +121,23 @@ class Weather {
                 dataArr.forEach(item => {
                     item.render(document.querySelector(".forecast-list"))
                 })
+            })
+            .catch(er => {
+                this.renderError(er.message);
             });
     }
     renderHourlyForecast (url) {
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (response.status >= 400) {
+                    throw new Error("Client error: code - " + response.status + ". There are no such city, try another one...")
+                } else if (response.status >= 500) {
+                    throw new Error("Server error: code - " + response.status + " try later...");
+                }
+                else {
+                    return response.json();
+                }
+            })
             .then(json => {
                 let data = [];
                 for (let i = 0; i < 7; i++) {
@@ -132,11 +161,23 @@ class Weather {
                     }
                     item.render(document.querySelector(".detailed-container"))
                 })
+            })
+            .catch(er => {
+                this.renderError(er.message);
             });
     }
     renderDetailedWeather (url) {
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (response.status >= 400) {
+                    throw new Error("Client error: code - " + response.status + ". There are no such city, try another one...")
+                } else if (response.status >= 500) {
+                    throw new Error("Server error: code - " + response.status + " try later...");
+                }
+                else {
+                    return response.json();
+                }
+            })
             .then(json => {
                 return new WeatherMainCard(
                     `${Math.round(json.main.temp)}\xB0C`,
@@ -153,22 +194,30 @@ class Weather {
             })
             .then(obj => {
                 obj.render(document.querySelector(".weather-details"));
+            })
+            .catch(er => {
+                this.renderError(er.message);
             });
     }
     renderTimeAndDate(name) {
         let city = new City(name);
-        city.render()
+        city.render();
+        city.updateTime();
     }
-
     renderAll() {
         this.renderTimeAndDate(this.city);
         this.renderDetailedWeather(this.url);
         this.renderDailyForecast(this.forecastUrl);
         this.renderHourlyForecast(this.forecastUrl);
     }
+    renderError(msg) {
+        document.querySelector(".error").textContent = msg;
+        document.querySelector(".error").style.display = "block";
+
+    }
 
 }
-class Helper {
+class DateTransformer {
     getDayName(date) {
         let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
         return names[date.getDay()];
@@ -182,10 +231,8 @@ class Helper {
         let minutes = date.getMinutes() < 10 ? `0${date.getMinutes()}` : `${date.getMinutes()}`;
         return `${hours}:${minutes}`;
     }
-
-
 }
-class City extends Helper {
+class City extends DateTransformer {
     constructor(city) {
         super();
         this.city = city[0].toUpperCase() + city.slice(1);
@@ -202,10 +249,13 @@ class City extends Helper {
             <p class="info-date">${this.day}, ${this.date} ${this.month}</p>
         `
     }
+    updateTime() {
+        setInterval(() => {
+            document.querySelector(".info-time").textContent = `${this.getTime(new Date())}`
+        }, 60000);
+    }
 }
-class WeatherMainCard extends Helper {
-
-
+class WeatherMainCard extends DateTransformer {
     constructor(temp, feelTemp, sunriseTime, sunsetTime, iconUrl, weatherMain, weatherDesc,
                 humidity, wind, pressure) {
         super();
@@ -235,7 +285,7 @@ class WeatherMainCard extends Helper {
         document.querySelector(".uv-value").textContent = this.uv;
     }
 }
-class WeatherCard extends Helper {
+class WeatherCard extends DateTransformer {
     class;
     constructor(time, iconUrl, temp, wind) {
         super();
@@ -243,7 +293,6 @@ class WeatherCard extends Helper {
         this.iconUrl = iconUrl;
         this.temp = temp;
         this.wind = wind;
-
     }
     render(anchor) {
         let div = document.createElement("div");
@@ -257,7 +306,7 @@ class WeatherCard extends Helper {
         anchor.append(div);
     }
 }
-class WeatherListItem extends Helper {
+class WeatherListItem extends DateTransformer {
     constructor(temp, iconUrl, date) {
         super();
         this.temp = temp;
@@ -265,7 +314,6 @@ class WeatherListItem extends Helper {
         this.date = date;
         this.formattedDate = `${this.getDayName(date)}, ${date.getDate()} ${this.getMonthName(date)}`;
     }
-
     render(anchor) {
         let div = document.createElement("div");
         div.classList.add("forecast-item");
@@ -277,7 +325,6 @@ class WeatherListItem extends Helper {
         anchor.append(div);
     }
 }
-
 
 let app = new App();
 app.init();
